@@ -7,8 +7,8 @@ services:
     container_name: graylog-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD:-password123}
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -22,11 +22,11 @@ services:
     container_name: graylog-opensearch
     restart: unless-stopped
     environment:
-      - cluster.name=graylog
-      - node.name=graylog-opensearch
-      - discovery.type=single-node
+      - cluster.name=${OPENSEARCH_CLUSTER_NAME:-graylog}
+      - node.name=${OPENSEARCH_NODE_NAME:-graylog-opensearch}
+      - discovery.type=${OPENSEARCH_DISCOVERY_TYPE:-single-node}
       - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "OPENSEARCH_JAVA_OPTS=${OPENSEARCH_JAVA_OPTS:--Xms512m -Xmx512m}"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
       - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
@@ -66,12 +66,12 @@ services:
     restart: unless-stopped
     environment:
       # Change these to secure values in production
-      GRAYLOG_PASSWORD_SECRET: somepasswordpepper
-      GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-      GRAYLOG_HTTP_EXTERNAL_URI: http://localhost:9000/
+      GRAYLOG_PASSWORD_SECRET: ${GRAYLOG_PASSWORD_SECRET:-somepasswordpepper}
+      GRAYLOG_ROOT_PASSWORD_SHA2: ${GRAYLOG_ROOT_PASSWORD_SHA2:-8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918}
+      GRAYLOG_HTTP_EXTERNAL_URI: ${GRAYLOG_HTTP_EXTERNAL_URI:-http://localhost:9000/}
       GRAYLOG_HTTP_BIND_ADDRESS: 0.0.0.0:9000
       GRAYLOG_ELASTICSEARCH_HOSTS: http://opensearch:9200
-      GRAYLOG_MONGODB_URI: mongodb://admin:password123@mongodb:27017/graylog
+      GRAYLOG_MONGODB_URI: mongodb://${MONGODB_ROOT_USERNAME:-admin}:${MONGODB_ROOT_PASSWORD:-password123}@mongodb:27017/${MONGODB_DATABASE:-graylog}
     volumes:
       - graylog_data:/usr/share/graylog/data
     networks:

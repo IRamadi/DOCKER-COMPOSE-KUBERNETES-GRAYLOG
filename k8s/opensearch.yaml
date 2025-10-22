@@ -34,19 +34,37 @@ spec:
         - containerPort: 9600
         env:
         - name: cluster.name
-          value: graylog
+          valueFrom:
+            configMapKeyRef:
+              name: graylog-config
+              key: OPENSEARCH_CLUSTER_NAME
         - name: node.name
-          value: graylog-opensearch
+          valueFrom:
+            configMapKeyRef:
+              name: graylog-config
+              key: OPENSEARCH_NODE_NAME
         - name: discovery.type
-          value: single-node
+          valueFrom:
+            configMapKeyRef:
+              name: graylog-config
+              key: OPENSEARCH_DISCOVERY_TYPE
         - name: bootstrap.memory_lock
           value: "true"
         - name: OPENSEARCH_JAVA_OPTS
-          value: "-Xms1g -Xmx1g"
+          valueFrom:
+            configMapKeyRef:
+              name: graylog-config
+              key: OPENSEARCH_JAVA_OPTS
         - name: DISABLE_INSTALL_DEMO_CONFIG
-          value: "true"
+          valueFrom:
+            configMapKeyRef:
+              name: graylog-config
+              key: DISABLE_INSTALL_DEMO_CONFIG
         - name: DISABLE_SECURITY_PLUGIN
-          value: "true"
+          valueFrom:
+            configMapKeyRef:
+              name: graylog-config
+              key: DISABLE_SECURITY_PLUGIN
         resources:
           limits:
             memory: 2Gi
@@ -105,9 +123,15 @@ spec:
         - containerPort: 5601
         env:
         - name: OPENSEARCH_HOSTS
-          value: '["http://opensearch:9200"]'
+          valueFrom:
+            configMapKeyRef:
+              name: graylog-config
+              key: OPENSEARCH_HOSTS
         - name: DISABLE_SECURITY_DASHBOARDS_PLUGIN
-          value: "true"
+          valueFrom:
+            configMapKeyRef:
+              name: graylog-config
+              key: DISABLE_SECURITY_DASHBOARDS_PLUGIN
 
 ---
 apiVersion: v1

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graylog-config
+  namespace: graylog
+data:
+  # Graylog Configuration
+  GRAYLOG_HTTP_EXTERNAL_URI: "http://localhost:9000/"
+  GRAYLOG_HTTP_BIND_ADDRESS: "0.0.0.0:9000"
+  GRAYLOG_ELASTICSEARCH_HOSTS: "http://opensearch:9200"
+  
+  # MongoDB Configuration
+  MONGODB_DATABASE: "graylog"
+  
+  # OpenSearch Configuration
+  OPENSEARCH_CLUSTER_NAME: "graylog"
+  OPENSEARCH_NODE_NAME: "graylog-opensearch"
+  OPENSEARCH_DISCOVERY_TYPE: "single-node"
+  OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
+  DISABLE_INSTALL_DEMO_CONFIG: "true"
+  DISABLE_SECURITY_PLUGIN: "true"
+  DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+  
+  # OpenSearch Dashboards Configuration
+  OPENSEARCH_HOSTS: '["http://opensearch:9200"]'

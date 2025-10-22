@@ -22,6 +22,62 @@ Log Sources → Graylog → OpenSearch (for search/analytics)
             MongoDB (for configuration/metadata)
 ```
 
+## Production Credentials Management
+
+### Environment Variables
+
+All sensitive configuration is managed through environment variables. The production team should:
+
+1. **Copy the example file**: `cp .env.example .env`
+2. **Edit the .env file** with production values
+3. **Use the setup scripts** for automated credential generation
+
+### Available Variables
+
+#### Graylog Configuration
+- `GRAYLOG_PASSWORD_SECRET`: Secure random string for Graylog encryption
+- `GRAYLOG_ROOT_PASSWORD`: Admin password for Graylog web interface
+- `GRAYLOG_ROOT_PASSWORD_SHA2`: SHA256 hash of the admin password
+- `GRAYLOG_HTTP_EXTERNAL_URI`: External URL for Graylog (e.g., https://graylog.company.com)
+
+#### MongoDB Configuration
+- `MONGODB_ROOT_USERNAME`: MongoDB admin username
+- `MONGODB_ROOT_PASSWORD`: MongoDB admin password
+- `MONGODB_DATABASE`: Database name for Graylog
+
+#### OpenSearch Configuration
+- `OPENSEARCH_CLUSTER_NAME`: OpenSearch cluster name
+- `OPENSEARCH_NODE_NAME`: OpenSearch node name
+- `OPENSEARCH_DISCOVERY_TYPE`: Discovery type (single-node for development)
+- `OPENSEARCH_JAVA_OPTS`: JVM options for OpenSearch
+
+#### Storage and Resources
+- `MONGODB_STORAGE_SIZE`: MongoDB persistent volume size
+- `OPENSEARCH_STORAGE_SIZE`: OpenSearch persistent volume size
+- `GRAYLOG_STORAGE_SIZE`: Graylog persistent volume size
+- `GRAYLOG_MEMORY_LIMIT`: Memory limit for Graylog container
+- `OPENSEARCH_MEMORY_LIMIT`: Memory limit for OpenSearch container
+
+### Manual Setup
+
+1. **Copy the environment template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit the .env file** with your production values:
+   ```bash
+   nano .env  # or your preferred editor
+   ```
+
+3. **Required changes for production:**
+   - Set `GRAYLOG_PASSWORD_SECRET` to a secure random string
+   - Set `GRAYLOG_ROOT_PASSWORD` to your desired admin password
+   - Generate `GRAYLOG_ROOT_PASSWORD_SHA2` using: `echo -n 'yourpassword' | sha256sum`
+   - Set `MONGODB_ROOT_PASSWORD` to a secure password
+   - Update `GRAYLOG_HTTP_EXTERNAL_URI` to your domain
+   - Adjust storage sizes and resource limits as needed
+
 ## Option 1: Docker Compose Setup
 
 ### Prerequisites
@@ -33,9 +89,13 @@ Log Sources → Graylog → OpenSearch (for search/analytics)
 
 ### Quick Start
 
-1. **Clone or download the files**
+1. **Configure credentials** (Production teams should do this first)
    ```bash
-   # Ensure you have docker-compose.yml in your directory
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env with your production values
+   nano .env  # or your preferred editor
    ```
 
 2. **Start the services**
@@ -130,9 +190,20 @@ docker-compose up -d
 
 ### Quick Start
 
-1. **Create namespace and apply manifests**
+1. **Configure credentials** (Production teams should do this first)
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env with your production values
+   nano .env  # or your preferred editor
+   ```
+
+2. **Create namespace and apply manifests**
    ```bash
    kubectl apply -f k8s/namespace.yaml
+   kubectl apply -f k8s/configmap.yaml
+   kubectl apply -f k8s/secrets.yaml
    kubectl apply -f k8s/mongodb.yaml
    kubectl apply -f k8s/opensearch.yaml
    kubectl apply -f k8s/graylog.yaml
