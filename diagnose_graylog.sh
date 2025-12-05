@@ -21,25 +21,24 @@ echo "Graylog Diagnostic Script"
 echo "=========================================="
 echo ""
 
-# 1. Check disk space
+# 1. Skip disk space check (often hangs in Docker environments)
 echo "1. DISK SPACE CHECK:"
 echo "-------------------"
-df -h | grep -E "Filesystem|/$|/var/lib/docker"
+echo "⚠️  Skipped to prevent hanging (run 'df -h' manually if needed)"
 echo ""
 
-# 2. Check Docker volume sizes
+# 2. Check Docker volume sizes (simplified to prevent hanging)
 echo "2. DOCKER VOLUME SIZES:"
 echo "----------------------"
-timeout 30 docker system df -v 2>/dev/null | grep -E "VOLUME NAME|graylog|mongodb|opensearch" || echo "Could not retrieve Docker volume information"
+(timeout 10 docker system df 2>/dev/null || docker system df 2>/dev/null) | head -20 || echo "Could not retrieve Docker volume information"
 echo ""
 
 # 3. Check specific volume sizes
 echo "3. SPECIFIC VOLUME SIZES:"
 echo "------------------------"
-for vol in graylog-mongodb_data graylog-opensearch_data graylog-graylog_data; do
-    echo "Checking volume: $vol"
-    timeout 10 docker volume inspect $vol 2>/dev/null | grep -E "Mountpoint|Name" || echo "Volume not found: $vol"
-done
+# List all volumes and filter for Graylog-related ones
+echo "Graylog-related volumes:"
+timeout 10 docker volume ls 2>/dev/null | grep -E "mongodb|opensearch|graylog" | head -10 || echo "Could not list volumes"
 echo ""
 
 # 4. Check container status
@@ -60,10 +59,24 @@ echo "------------------------"
 curl -s --max-time 5 --connect-timeout 3 http://localhost:9200/_cat/allocation?v 2>/dev/null || echo "Cannot connect to OpenSearch (timeout or connection refused)"
 echo ""
 
-# 7. Check OpenSearch indices
+# 7. Check OpenSearch indices (and check for read-only status - MOST COMMON ISSUE)
 echo "7. OPENSEARCH INDICES:"
 echo "---------------------"
-curl -s --max-time 5 --connect-timeout 3 http://localhost:9200/_cat/indices?v 2>/dev/null | head -20 || echo "Cannot connect to OpenSearch (timeout or connection refused)"
+INDICES=$(curl -s --max-time 5 --connect-timeout 3 http://localhost:9200/_cat/indices?v 2>/dev/null)
+if [ $? -eq 0 ] && [ ! -z "$INDICES" ]; then
+    echo "$INDICES" | head -20
+    echo ""
+    # Check for read-only indices
+    READONLY=$(echo "$INDICES" | grep -i "read_only" | wc -l)
+    if [ "$READONLY" -gt 0 ]; then
+        echo "❌ WARNING: Found $READONLY indices in read-only mode!"
+        echo "This is likely why logs stopped coming in!"
+        echo "Read-only indices:"
+        echo "$INDICES" | grep -i "read_only" | head -10
+    fi
+else
+    echo "Cannot connect to OpenSearch (timeout or connection refused)"
+fi
 echo ""
 
 # 8. Check Graylog container logs (last 50 lines)
@@ -100,4 +113,13 @@ echo ""
 echo "=========================================="
 echo "Diagnostic Complete"
 echo "=========================================="
+echo ""
+echo "🔍 If you see read-only indices above, that's likely the problem!"
+echo "   Solution: Free up disk space and remove read-only setting"
+echo "   Use: ./fix_readonly_indices.sh to fix read-only indices"
+echo ""
+echo "📋 Other things to check:"
+echo "   - Graylog UI: http://localhost:9000 -> System -> Inputs"
+echo "   - System -> Indices for index rotation issues"
+echo "   - Check disk space manually: df -h"
 
